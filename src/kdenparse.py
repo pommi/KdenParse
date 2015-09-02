@@ -48,13 +48,13 @@ argparser.add_argument('projectFile')
 args = argparser.parse_args()
 
 if not os.path.isfile(args.projectFile):
-    print "Not a file we can work with..."
+    print("Not a file we can work with...")
     sys.exit(1)
 
 try: 
     args.projectFile.rindex(".kdenlive",-9)
 except ValueError:
-    print "Invalid filename. Exiting."
+    print("Invalid filename. Exiting.")
     sys.exit(1)
 
 from xml.dom import minidom
@@ -150,7 +150,7 @@ class KdenParse:
             progIn = 0 # showtime tally
             progOut = 0
             srcChannel = "C" # default channel/track assignment 
-            print "\n === " + playlist["pid"] + " === \n"
+            print("\n === " + playlist["pid"] + " === \n")
             for event in playlist["events"]:
                 prod = event["producer"]
                 prodChunks = prod.split("_")
@@ -178,16 +178,16 @@ class KdenParse:
                 else:
                     sourceRef = sourceFile 
                 
-                print "* FROM CLIP NAME: " + sourceRef
-                print str(EdlEventCnt) + "  " + prod + "  ",
-                print srcType + "  " + srcChannel + "  ", 
+                print("* FROM CLIP NAME: " + sourceRef)
+                print(str(EdlEventCnt) + "  " + prod + "  ")
+                print(srcType + "  " + srcChannel + "  ")
                 
                 if args.show_frames:
-                    print str(srcIn) + " " + str(srcOut) + "",
-                    print str(progIn) + " " + str(progOut)
+                    print(str(srcIn) + " " + str(srcOut) + "")
+                    print(str(progIn) + " " + str(progOut))
                 else:
-                    print self.framesToDF(srcIn) + " " + self.framesToDF(srcOut) + "",
-                    print self.framesToDF(progIn) + " " + self.framesToDF(progOut)
+                    print(self.framesToDF(srcIn) + " " + self.framesToDF(srcOut) + "")
+                    print(self.framesToDF(progIn) + " " + self.framesToDF(progOut))
         
                 if EdlEventCnt == 1:
                     progIn = progIn + 1
@@ -270,25 +270,25 @@ if args.create_edl:
 
 if args.get_profile:
     for i in kp.getProjectProfile().keys():
-        print i + ": " + kp.getProjectProfile()[i]    
+        print(i + ": " + kp.getProjectProfile()[i])  
 
 if args.get_producers:
     for i in kp.getProducers():
-        print "\n=================\n"
+        print("\n=================\n")
         for kv in i:
-            print kv + ": " + i[kv]
+            print(kv + ": " + i[kv])
 
 if args.get_kproducers:
     for i in kp.getKProducers():
-        print "\n=================\n"
+        print("\n=================\n")
         for kv in i:
-            print kv + ": " + i[kv]
+            print(kv + ": " + i[kv])
         
 if args.deref_proxy:
     for i in kp.derefProxy():
-        print i + ": " + kp.derefProxy()[i]
+        print(i + ": " + kp.derefProxy()[i])
         
 if args.show_links:
     for i in kp.linkReferences():
-        print i + ": " + kp.linkReferences()[i]
+        print(i + ": " + kp.linkReferences()[i])
 
