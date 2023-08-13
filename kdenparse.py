@@ -2,6 +2,12 @@
 # Copyright 2011 Will Riley
 # Distributed under the terms of the GNU General Public License v3
 
+import os
+import sys
+import argparse
+from xml.dom import minidom
+import datetime
+
 """
  kdenparse.py
  
@@ -12,7 +18,6 @@
  http://www.kdenlive.org
 
 """
-import os, sys, argparse
 
 version_ = "%(prog)s 0.1.0"
 
@@ -73,11 +78,6 @@ try:
 except ValueError:
     print("Invalid filename. Exiting.")
     sys.exit(1)
-
-from xml.dom import minidom
-from decimal import Decimal, getcontext, ROUND_DOWN
-from math import modf, floor
-import datetime
 
 
 class KdenParse:
