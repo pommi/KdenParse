@@ -84,6 +84,7 @@ except ValueError:
 from xml.dom import minidom
 from decimal import Decimal, getcontext, ROUND_DOWN
 from math import modf, floor
+import datetime
 
 
 class KdenParse:
@@ -172,8 +173,8 @@ class KdenParse:
         sourceLinks = self.linkReferences()
         for playlist in self.getPlaylists():
             EdlEventCnt = 1
-            progIn = 0  # showtime tally
-            progOut = 0
+            progIn = datetime.datetime.strptime("00:00:00.000", '%H:%M:%S.%f')  # showtime tally
+            progOut = datetime.datetime.strptime("00:00:00.000", '%H:%M:%S.%f')
             srcChannel = "C"  # default channel/track assignment
             print("\n === " + playlist["pid"] + " === \n")
             for event in playlist["events"]:
@@ -185,10 +186,8 @@ class KdenParse:
                 if srcType == "A":
                     srcChannel = prodChunks[1]
 
-                srcIn = int(event["inTime"])  # source clip IN time
-                srcOut = int(event["outTime"])  # source clip OUT time
-                if EdlEventCnt != 1:
-                    srcOut = srcOut + 1
+                srcIn = datetime.datetime.strptime(event["inTime"], '%H:%M:%S.%f')  # source clip IN time
+                srcOut = datetime.datetime.strptime(event["outTime"], '%H:%M:%S.%f')  # source clip OUT time
                 srcDur = srcOut - srcIn
                 progOut = progOut + srcDur  # increment program tally
 
@@ -208,14 +207,11 @@ class KdenParse:
                 print(srcType + "  " + srcChannel + "  ")
 
                 if args.show_frames:
-                    print(str(srcIn) + " " + str(srcOut) + "")
-                    print(str(progIn) + " " + str(progOut))
+                    print("{} {}".format(srcIn.strftime("%H:%M:%S.%f"), srcOut.strftime("%H:%M:%S.%f")))
+                    print("{} {}".format(progIn.strftime("%H:%M:%S.%f"), progOut.strftime("%H:%M:%S.%f")))
                 else:
                     print(self.framesToDF(srcIn) + " " + self.framesToDF(srcOut) + "")
                     print(self.framesToDF(progIn) + " " + self.framesToDF(progOut))
-
-                if EdlEventCnt == 1:
-                    progIn = progIn + 1
 
                 progIn = progIn + srcDur
                 EdlEventCnt = EdlEventCnt + 1
