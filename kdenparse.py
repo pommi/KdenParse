@@ -33,13 +33,6 @@ argparser.add_argument(
     help="Dereference proxy clip (show original filenames)",
 )
 argparser.add_argument(
-    "--frames",
-    action="store_true",
-    default=False,
-    dest="show_frames",
-    help="Show frames instead of TC when using --edl.",
-)
-argparser.add_argument(
     "--links",
     action="store_true",
     default=False,
@@ -192,103 +185,15 @@ class KdenParse:
                 progOut = progOut + srcDur  # increment program tally
 
                 sourcePath = sourceLinks[prod]
-                sourceFile = sourcePath.split("/")[-1]
-                proxyList = self.derefProxy()
-                if proxyList:
-                    try:
-                        sourceRef = "(" + proxyList[sourcePath].split("/")[-1] + ") " + sourceFile
-                    except KeyError:
-                        sourceRef = sourceFile
-                else:
-                    sourceRef = sourceFile
 
-                print("* FROM CLIP NAME: " + sourceRef)
+                print("* FROM CLIP NAME: " + sourcePath)
                 print(str(EdlEventCnt) + "  " + prod + "  ")
                 print(srcType + "  " + srcChannel + "  ")
-
-                if args.show_frames:
-                    print("{} {}".format(srcIn.strftime("%H:%M:%S.%f"), srcOut.strftime("%H:%M:%S.%f")))
-                    print("{} {}".format(progIn.strftime("%H:%M:%S.%f"), progOut.strftime("%H:%M:%S.%f")))
-                else:
-                    print(self.framesToDF(srcIn) + " " + self.framesToDF(srcOut) + "")
-                    print(self.framesToDF(progIn) + " " + self.framesToDF(progOut))
+                print("{} {}".format(srcIn.strftime("%H:%M:%S.%f"), srcOut.strftime("%H:%M:%S.%f")))
+                print("{} {}".format(progIn.strftime("%H:%M:%S.%f"), progOut.strftime("%H:%M:%S.%f")))
 
                 progIn = progIn + srcDur
                 EdlEventCnt = EdlEventCnt + 1
-
-    def framesToABS(self, frameAddress):
-        getcontext().prec = 10
-        getcontext().rounding = ROUND_DOWN
-        projectMeta = self.getProjectProfile()
-        frameRate = Decimal(projectMeta["frame_rate_num"]) / Decimal(projectMeta["frame_rate_den"])
-        frameDuration = 1 / frameRate
-        # print "fps = " + str(frameRate)
-        # print "1 fr = " + str(frameDuration)  + " secs"
-        absDuration = Decimal(frameAddress) * Decimal(
-            frameDuration
-        )  # frameAddress length in seconds
-        # print "TC = " + str(absDuration)
-        f, w = modf(absDuration)  # split float at decimal (fraction, whole)
-        # print "Split: " + "%f + %f" % (w, f)
-        frameRemainder = Decimal(str(f)) / Decimal(frameDuration)
-        m, s = divmod(w, 60)
-        h, m = divmod(m, 60)
-        tc = "%d:%02d:%02d:%02d" % (h, m, s, frameRemainder)
-        return tc
-
-    def framesToDF(self, framenumber):
-        """
-        This method adapted from C++ code called "timecode" by Jason Wood.
-        begin: Wed Dec 17 2003
-        copyright: (C) 2003 by Jason Wood
-        email: jasonwood@blueyonder.co.uk
-        Framerate should be 29.97, 59.94, or 23.976, otherwise the calculations will be off.
-        """
-
-        projectMeta = self.getProjectProfile()
-        framerate = float(projectMeta["frame_rate_num"]) / float(projectMeta["frame_rate_den"])
-
-        # Number of frames to drop on the minute marks is the nearest integer to 6% of the framerate
-        dropFrames = round(framerate * 0.066666)
-        # Number of frames in an hour
-        framesPerHour = round(framerate * 60 * 60)
-        # Number of frames in a day - timecode rolls over after 24 hours
-        framesPerDay = framesPerHour * 24
-        # Number of frames per ten minutes
-        framesPer10Minutes = round(framerate * 60 * 10)
-        # Number of frames per minute is the round of the framerate * 60 minus the number of dropped frames
-        framesPerMinute = (round(framerate) * 60) - dropFrames
-
-        if framenumber < 0:  # For negative time, add 24 hours.
-            framenumber = framesPerDay + framenumber
-
-        # If framenumber is greater than 24 hrs, next operation will rollover clock
-        # % is the modulus operator, which returns a remainder. a % b = the remainder of a/b
-
-        framenumber = framenumber % framesPerDay
-        d = floor(framenumber / framesPer10Minutes)
-        m = framenumber % framesPer10Minutes
-
-        if m > 1:
-            framenumber = (
-                framenumber
-                + (dropFrames * 9 * d)
-                + dropFrames * floor((m - dropFrames) / framesPerMinute)
-            )
-        else:
-            framenumber = framenumber + dropFrames * 9 * d
-
-        frRound = round(framerate)
-        frames = framenumber % frRound
-        seconds = floor(framenumber / frRound) % 60
-        minutes = floor(floor(framenumber / frRound) / 60) % 60
-        hours = floor(floor(floor(framenumber / frRound) / 60) / 60)
-
-        tc = "%d:%02d:%02d;%02d" % (hours, minutes, seconds, frames)
-        return tc
-
-    def framesToNDF(self):
-        pass
 
 
 kp = KdenParse(args.projectFile)
