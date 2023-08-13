@@ -31,6 +31,9 @@ argparser.add_argument(
     "--edl", action="store_true", default=False, dest="create_edl", help="Generate EDL output."
 )
 argparser.add_argument(
+    "--ffmpeg", action="store_true", default=False, dest="ffmpeg", help="Generate ffmpeg commands"
+)
+argparser.add_argument(
     "--deref-proxy",
     action="store_true",
     default=False,
@@ -195,11 +198,52 @@ class KdenParse:
                 progIn = progIn + srcDur
                 EdlEventCnt = EdlEventCnt + 1
 
+    def ffmpeg(self):
+        sourceLinks = self.linkReferences()
+        for playlist in self.getPlaylists():
+            EdlEventCnt = 1
+            progIn = datetime.datetime.strptime("00:00:00.000", '%H:%M:%S.%f')  # showtime tally
+            progOut = datetime.datetime.strptime("00:00:00.000", '%H:%M:%S.%f')
+            srcChannel = "C"  # default channel/track assignment
+            print("\n === " + playlist["pid"] + " === \n")
+            for event in playlist["events"]:
+                prod = event["producer"]
+                prodChunks = prod.split("_")
+                srcType = prodChunks[-1].capitalize()[:1]
+
+                # if it's an audio event, extract channel info from producer id
+                if srcType == "A":
+                    srcChannel = prodChunks[1]
+
+                srcIn = datetime.datetime.strptime(event["inTime"], '%H:%M:%S.%f')  # source clip IN time
+                srcOut = datetime.datetime.strptime(event["outTime"], '%H:%M:%S.%f')  # source clip OUT time
+                srcDur = srcOut - srcIn
+                progOut = progOut + srcDur  # increment program tally
+
+                sourcePath = sourceLinks[prod]
+
+                print("ffmpeg -i {} -acodec copy -vcodec copy -ss {} -t {} /tmp/{}.mp4".format(
+                    sourcePath, srcIn.strftime("%H:%M:%S.%f"), srcDur.total_seconds(), EdlEventCnt))
+
+                progIn = progIn + srcDur
+                EdlEventCnt = EdlEventCnt + 1
+
+            if EdlEventCnt > 1:
+                print("cat > /tmp/concat.txt <<EOT")
+                for c in range(1, EdlEventCnt):
+                    print("file '/tmp/{}.mp4'".format(c))
+                print("EOT")
+
+                print("ffmpeg -f concat -safe 0 -i /tmp/concat.txt -c copy /tmp/output.mp4")
+
 
 kp = KdenParse(args.projectFile)
 
 if args.create_edl:
     kp.createEdl()
+
+if args.ffmpeg:
+    kp.ffmpeg()
 
 if args.get_profile:
     for i in kp.getProjectProfile().keys():
