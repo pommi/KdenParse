@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Copyright 2011 Will Riley
 # Distributed under the terms of the GNU General Public License v3
 
