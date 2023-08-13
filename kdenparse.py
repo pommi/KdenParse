@@ -144,7 +144,8 @@ class KdenParse:
             pDict["outTime"] = p.attributes["out"].value
             properties = p.getElementsByTagName("property")
             for props in properties:
-                pDict[props.attributes["name"].value.replace(".", "_")] = props.firstChild.data
+                if props.firstChild is not None:
+                    pDict[props.attributes["name"].value.replace(".", "_")] = props.firstChild.data
 
             producerList.append(pDict)
         return tuple(producerList)
